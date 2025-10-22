@@ -1,0 +1,70 @@
+## 🗄 *2. ملف قاعدة البيانات (database/database.sql):*
+
+```sql
+-- إنشاء قاعدة البيانات
+CREATE DATABASE IF NOT EXISTS maksabk_online CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE maksabk_online;
+
+-- جدول المستخدمين
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('user', 'admin', 'super_admin') DEFAULT 'user',
+    points DECIMAL(10,2) DEFAULT 0,
+    total_earnings DECIMAL(10,2) DEFAULT 0,
+    profile_image VARCHAR(255),
+    is_active BOOLEAN DEFAULT TRUE,
+    registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP NULL
+);
+
+-- جدول المهام
+CREATE TABLE tasks (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    points_value DECIMAL(10,2) NOT NULL,
+    task_type ENUM('daily', 'weekly', 'monthly', 'one_time') DEFAULT 'daily',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+-- جدول مهام المستخدمين
+CREATE TABLE user_tasks (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT,
+    task_id INT,
+    points_earned DECIMAL(10,2),
+    status ENUM('pending', 'completed', 'rejected') DEFAULT 'pending',
+    completed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (task_id) REFERENCES tasks(id)
+);
+
+-- جدول طلبات السحب
+CREATE TABLE withdrawal_requests (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT,
+    amount DECIMAL(10,2) NOT NULL,
+    points_used DECIMAL(10,2) NOT NULL,
+    payment_method ENUM('bank', 'stc_pay', 'other') DEFAULT 'bank',
+    account_details TEXT,
+    status ENUM('pending', 'approved', 'rejected', 'paid') DEFAULT 'pending',
+    admin_notes TEXT,
+    requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    processed_at TIMESTAMP NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- إضافة المهام الافتراضية
+INSERT INTO tasks (title, description, points_value, task_type) VALUES
+('التسجيل اليومي', 'سجل دخولك اليومي لتحصل على نقاط', 10.00, 'daily'),
+('مشاهدة فيديو تعليمي', 'شاهد فيديو تعليمي عن الربح من الإنترنت', 25.00, 'daily'),
+('دعوة صديق', 'ادعُ صديقاً للانضمام إلى المنصة', 50.00, 'one_time'),
+('نشر منتج', 'انشر منتجاً على وسائل التواصل الاجتماعي', 30.00, 'daily'),
+('إكمال البروفايل', 'أكمل معلومات ملفك الشخصي', 15.00, 'one_time');
